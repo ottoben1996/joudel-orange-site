@@ -137,6 +137,9 @@
     }
   }
   if (!reduit) setTimeout(reveleTitre, intro ? 1100 : 80);
+  // filet de sécurité : le rideau disparaît du DOM même si l'animation CSS ne se joue pas
+  // (onglet en arrière-plan, moteur graphique bloqué, animation désactivée par l'OS)
+  if (rideau) setTimeout(() => { if (rideau.isConnected) rideau.remove(); }, intro ? 2200 : 60);
 
   /* ---------- révélations au scroll ---------- */
   const elements = [];
