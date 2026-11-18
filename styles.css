@@ -422,7 +422,7 @@ a { color: inherit; }
 .lightbox {
   width: min(720px, calc(100vw - 2rem));
   max-height: calc(100vh - 2rem);
-  padding: 1.6rem;
+  padding: 0;
   border: 1px solid var(--filet);
   border-radius: 0;
   background: var(--blanc);
@@ -430,7 +430,7 @@ a { color: inherit; }
   overflow: auto;
 }
 .lightbox::backdrop { background: rgba(23, 23, 20, 0.62); backdrop-filter: blur(3px); }
-.lightbox figure { margin: 0; }
+.lightbox figure { margin: 0; padding: 0 1.6rem 1.6rem; }
 .lightbox-image { background: var(--ivoire); display: grid; place-items: center; }
 .lightbox-image img {
   width: 100%;
@@ -450,18 +450,31 @@ a { color: inherit; }
   text-transform: uppercase;
 }
 .lightbox-desc { display: block; margin-top: 0.4rem; font-size: 0.95rem; font-weight: 400; color: var(--gris); }
+/* barre d'en-tête collante : la croix ne peut pas se perdre dans le contenu,
+   même quand la lightbox défile sur un petit écran */
+.lightbox-barre {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.5rem 0.5rem 0;
+  background: var(--blanc);
+}
 .lightbox-fermer {
-  position: absolute;
-  top: 0.7rem;
-  right: 0.9rem;
+  display: grid;
+  place-items: center;
   width: 44px;
   height: 44px;
+  padding: 0;
   background: none;
   border: 0;
-  font-size: 1.1rem;
   color: var(--encre);
   cursor: pointer;
+  transition: color 0.2s ease, transform 0.25s var(--courbe);
 }
+.lightbox-fermer:hover { color: var(--or-texte); transform: rotate(90deg); }
+.lightbox-fermer svg { display: block; }
 .lightbox-nav {
   position: absolute;
   top: 50%;

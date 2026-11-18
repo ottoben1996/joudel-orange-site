@@ -220,7 +220,11 @@ setTimeout(function () { if (!document.documentElement.hasAttribute("data-motion
 </footer>
 
 <dialog class="lightbox" id="lightbox" aria-labelledby="lightbox-nom">
-  <button class="lightbox-fermer" type="button" aria-label="Fermer">✕</button>
+  <div class="lightbox-barre">
+    <button class="lightbox-fermer" type="button" aria-label="Fermer">
+      <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>
+    </button>
+  </div>
   <button class="lightbox-nav lightbox-prec" type="button" aria-label="Gâteau précédent">‹</button>
   <figure>
     <div class="lightbox-image"><img id="lightbox-img" alt=""></div>
