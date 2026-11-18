@@ -60,9 +60,12 @@ a { color: inherit; }
   background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--filet);
-  transition: padding 0.3s var(--courbe);
+  transition: box-shadow 0.25s ease;
 }
-.entete.compacte { padding-block: 0.6rem; }
+/* l'entête ne change plus de hauteur (le padding animé refluait toute la page) :
+   c'est le logo qui se resserre et l'ombre qui apparaît */
+.entete.compacte .marque { transform: scale(0.88); }
+.entete.compacte { box-shadow: 0 1px 0 var(--filet), 0 10px 24px -22px rgba(23, 23, 20, 0.45); }
 
 .marque {
   display: inline-flex;
@@ -70,9 +73,10 @@ a { color: inherit; }
   gap: 0.7rem;
   text-decoration: none;
   color: var(--encre);
+  transform-origin: left center;
+  transition: transform 0.22s var(--courbe);
 }
-.marque-logo { width: 40px; height: 40px; transition: transform 0.5s var(--courbe); }
-.marque:hover .marque-logo { transform: rotate(-90deg); }
+.marque-logo { width: 40px; height: 40px; transition: transform 0.22s var(--courbe); }
 .marque-nom {
   font-family: var(--display);
   font-size: 1.5rem;
@@ -98,11 +102,22 @@ a { color: inherit; }
   text-transform: uppercase;
   text-decoration: none;
   color: var(--encre);
+  position: relative;
   padding-block: 0.4rem;
-  background: linear-gradient(var(--or), var(--or)) no-repeat left bottom / 0% 1px;
-  transition: background-size 0.3s var(--courbe);
 }
-.nav a:hover, .nav a.actif { background-size: 100% 1px; }
+.nav a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--or);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.28s var(--courbe);
+}
+.nav a.actif::after { transform: scaleX(1); }
 
 /* ---------- héro ---------- */
 .hero {
@@ -146,14 +161,13 @@ a { color: inherit; }
   text-decoration: none;
   border: 1px solid var(--encre);
   border-radius: 0;
-  transition: background-color 0.3s var(--courbe), color 0.3s var(--courbe),
-              transform 0.35s var(--courbe);
+  /* le press doit répondre en 100-160 ms ; les couleurs peuvent être plus lentes */
+  transition: background-color 0.25s ease, color 0.25s ease,
+              border-color 0.25s ease, transform 0.16s var(--courbe);
 }
 .bouton-plein { background: var(--encre); color: var(--blanc); }
-.bouton-plein:hover { background: var(--or); border-color: var(--or); color: var(--blanc); }
 .bouton-ligne { background: transparent; color: var(--encre); }
-.bouton-ligne:hover { background: var(--encre); color: var(--blanc); }
-.bouton:active { transform: scale(0.98); }
+.bouton:active { transform: scale(0.97); }
 
 .hero-visuel { justify-self: center; width: 100%; max-width: 520px; }
 .hero-legende {
@@ -240,10 +254,8 @@ a { color: inherit; }
   text-align: left;
   cursor: pointer;
 }
-.carte .arche { transition: border-color 0.4s var(--courbe), transform 0.45s var(--courbe); }
-.carte:hover .arche { border-color: var(--or); transform: translateY(-4px); }
-.carte img { aspect-ratio: 1; transition: transform 0.7s var(--courbe); }
-.carte:hover img { transform: scale(1.035); }
+.carte .arche { transition: border-color 0.22s var(--courbe), box-shadow 0.22s ease, transform 0.22s var(--courbe); }
+.carte img { aspect-ratio: 1; transition: transform 0.24s var(--courbe); }
 .carte-nom {
   display: block;
   margin-top: 1rem;
@@ -254,7 +266,6 @@ a { color: inherit; }
   text-transform: uppercase;
   transition: color 0.25s ease;
 }
-.carte:hover .carte-nom { color: var(--or); }
 .carte-desc {
   display: block;
   margin-top: 0.45rem;
@@ -297,7 +308,6 @@ a { color: inherit; }
   text-decoration: none;
   transition: background-color 0.3s var(--courbe), color 0.3s var(--courbe);
 }
-.note-lien:hover { background: var(--encre); color: var(--blanc); }
 
 /* ---------- maison ---------- */
 .maison {
@@ -473,7 +483,6 @@ a { color: inherit; }
   cursor: pointer;
   transition: color 0.2s ease, transform 0.25s var(--courbe);
 }
-.lightbox-fermer:hover { color: var(--or-texte); transform: rotate(90deg); }
 .lightbox-fermer svg { display: block; }
 .lightbox-nav {
   position: absolute;
@@ -491,7 +500,6 @@ a { color: inherit; }
   cursor: pointer;
   transition: background-color 0.25s ease, border-color 0.25s ease;
 }
-.lightbox-nav:hover { background: var(--ivoire); border-color: var(--or); }
 .lightbox-prec { left: 0.6rem; }
 .lightbox-suiv { right: 0.6rem; }
 
@@ -505,14 +513,14 @@ a { color: inherit; }
   height: 2px;
   background: var(--or);
   transform-origin: left;
-  transform: scaleX(var(--lu, 0));
+  transform: scaleX(0);
   pointer-events: none;
 }
 
 .anim [data-reveal] {
   opacity: 0;
   transform: translateY(24px);
-  transition: opacity 0.7s ease, transform 0.7s var(--courbe);
+  transition: opacity 0.5s ease, transform 0.5s var(--courbe);
   transition-delay: var(--retard, 0s);
 }
 .anim [data-reveal].vu { opacity: 1; transform: translateY(0); }
@@ -522,20 +530,28 @@ a { color: inherit; }
   top: 0;
   left: 0;
   z-index: 100;
-  width: 18px;
-  height: 18px;
-  margin: -9px 0 0 -9px;
-  border: 1.5px solid var(--encre);
-  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  margin: -28px 0 0 -28px;
   pointer-events: none;
   display: none;
   align-items: center;
   justify-content: center;
+}
+/* un seul transform à animer : la pastille est dessinée en ::before */
+.curseur::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid var(--encre);
   background: transparent;
-  transition: width 0.25s var(--courbe), height 0.25s var(--courbe),
-              margin 0.25s var(--courbe), background-color 0.25s ease, border-color 0.25s ease;
+  transform: scale(0.32);
+  transition: transform 0.25s var(--courbe), background-color 0.25s ease, border-color 0.25s ease;
 }
 .curseur-texte {
+  position: relative;
+  z-index: 1;
   font-family: var(--texte);
   font-size: 0.68rem;
   font-weight: 500;
@@ -545,10 +561,8 @@ a { color: inherit; }
   opacity: 0;
   transition: opacity 0.2s ease;
 }
-.curseur.voir {
-  width: 62px;
-  height: 62px;
-  margin: -31px 0 0 -31px;
+.curseur.voir::before {
+  transform: scale(1);
   background: var(--encre);
   border-color: var(--encre);
   box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.9);
@@ -559,7 +573,7 @@ a { color: inherit; }
   .anim.has-curseur, .anim.has-curseur * { cursor: none; }
 }
 
-.anim .hero-visuel { transform: translateY(var(--py, 0px)); }
+.anim .hero-visuel { will-change: transform; }
 
 .lightbox {
   transition: opacity 0.25s ease, transform 0.35s var(--courbe),
@@ -588,7 +602,7 @@ a { color: inherit; }
 }
 .anim .rideau {
   display: flex;
-  animation: leve-rideau 0.9s var(--courbe) 0.78s forwards;
+  animation: leve-rideau 0.6s var(--courbe) 0.35s forwards;
 }
 .rideau-logo { width: 104px; height: 104px; }
 .rideau-nom {
@@ -616,7 +630,7 @@ a { color: inherit; }
   transform: scaleX(0);
   transform-origin: left;
 }
-.anim .rideau-trait { animation: pousse-trait 0.7s var(--courbe) 0.12s forwards; }
+.anim .rideau-trait { animation: pousse-trait 0.5s var(--courbe) 0.08s forwards; }
 @keyframes leve-rideau { to { transform: translateY(-101%); } }
 @keyframes pousse-trait { to { transform: scaleX(1); } }
 
@@ -658,6 +672,21 @@ a { color: inherit; }
   .hero-actions { flex-direction: column; gap: 0.6rem; }
   .hero-actions .bouton { width: 100%; }
   .marque-nom { font-size: 1.25rem; }
+}
+
+/* ---------- survols : uniquement sur un vrai pointeur ----------
+   sur tactile, :hover se déclenche au tap et laisse l'état collé */
+@media (hover: hover) and (pointer: fine) {
+  .marque:hover .marque-logo { transform: rotate(-90deg); }
+  .nav a:hover::after { transform: scaleX(1); }
+  .bouton-plein:hover { background: var(--or); border-color: var(--or); color: var(--blanc); }
+  .bouton-ligne:hover { background: var(--encre); color: var(--blanc); }
+  .carte:hover .arche { border-color: var(--or); transform: translateY(-4px); box-shadow: 0 14px 28px -22px rgba(23, 23, 20, 0.5); }
+  .carte:hover img { transform: scale(1.035); }
+  .carte:hover .carte-nom { color: var(--or); }
+  .note-lien:hover { background: var(--encre); color: var(--blanc); }
+  .lightbox-fermer:hover { color: var(--or-texte); transform: rotate(90deg); }
+  .lightbox-nav:hover { background: var(--ivoire); border-color: var(--or); }
 }
 
 @media (prefers-reduced-motion: reduce) {

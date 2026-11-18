@@ -136,10 +136,10 @@
       try { sessionStorage.setItem("joudel-intro", "1"); } catch (e) { /* sans stockage */ }
     }
   }
-  if (!reduit) setTimeout(reveleTitre, intro ? 1100 : 80);
+  if (!reduit) setTimeout(reveleTitre, intro ? 700 : 80);
   // filet de sécurité : le rideau disparaît du DOM même si l'animation CSS ne se joue pas
   // (onglet en arrière-plan, moteur graphique bloqué, animation désactivée par l'OS)
-  if (rideau) setTimeout(() => { if (rideau.isConnected) rideau.remove(); }, intro ? 2200 : 60);
+  if (rideau) setTimeout(() => { if (rideau.isConnected) rideau.remove(); }, intro ? 1600 : 60);
 
   /* ---------- révélations au scroll ---------- */
   const elements = [];
@@ -198,25 +198,33 @@
   // pas de saut de phase) et on le met en pause au survol (WCAG 2.2.2).
   const animRuban = piste.getAnimations ? piste.getAnimations()[0] || null : null;
   let survolRuban = false;
+  let dernierScrollT = performance.now();
+  let actif = false;
   const ruban = document.querySelector(".ruban");
   ruban.addEventListener("mouseenter", () => { survolRuban = true; });
   ruban.addEventListener("mouseleave", () => { survolRuban = false; });
+
+  const barre = document.querySelector(".barre-progression");
+
+  // on écrit des transforms sur les éléments concernés, jamais une variable CSS sur <html>
+  // (une variable sur la racine invalide le style de tout le document à chaque frame)
+  function peindre(avecParallaxe) {
+    const y = window.scrollY;
+    const maxY = racine.scrollHeight - window.innerHeight;
+    if (barre) barre.style.transform = "scaleX(" + (maxY > 0 ? Math.min(y / maxY, 1) : 0).toFixed(4) + ")";
+    entete.classList.toggle("compacte", y > hero.offsetHeight * 0.6);
+    if (y < 120) liens.forEach(a => a.classList.remove("actif"));
+    if (avecParallaxe && y < hero.offsetHeight + 200) {
+      heroVisuel.style.transform = "translateY(" + (y * 0.12).toFixed(1) + "px)";
+    }
+  }
 
   function boucle(t) {
     const dt = Math.min((t - dernierT) / 1000, 0.1);
     dernierT = t;
     const y = window.scrollY;
-    const maxY = racine.scrollHeight - window.innerHeight;
+    peindre(true);
 
-    racine.style.setProperty("--lu", maxY > 0 ? (y / maxY).toFixed(4) : 0);
-    entete.classList.toggle("compacte", y > hero.offsetHeight * 0.6);
-    // en haut de page, aucun lien de nav n'est actif
-    if (y < 120) liens.forEach(a => a.classList.remove("actif"));
-
-    // parallaxe douce du visuel héro, tant qu'il est à l'écran
-    if (y < hero.offsetHeight + 200) {
-      heroVisuel.style.setProperty("--py", (y * 0.12).toFixed(1) + "px");
-    }
     // le ruban accélère avec la vitesse de scroll puis revient à son rythme
     const v = Math.abs(y - dernierY) / Math.max(dt, 0.001); // px/s
     const cible = survolRuban ? 0 : 1 + Math.min(v / 1400, 2.2);
@@ -225,29 +233,35 @@
     if (animRuban) animRuban.playbackRate = vitesseRuban < 0.02 ? 0 : vitesseRuban;
     dernierY = y;
 
-    if (document.visibilityState === "visible") {
-      requestAnimationFrame(boucle);
-    } else {
-      // onglet caché : on s'arrête, on repart au retour
-      document.addEventListener("visibilitychange", function reprise() {
-        if (document.visibilityState === "visible") {
-          document.removeEventListener("visibilitychange", reprise);
-          dernierT = performance.now();
-          dernierY = window.scrollY;
-          requestAnimationFrame(boucle);
-        }
-      });
+    // la boucle s'endort dès que plus rien ne bouge : pas de 60 fps à vide
+    const renduAuRythme = Math.abs(vitesseRuban - 1) < 0.01 && performance.now() - dernierScrollT > 200;
+    const figeSurvol = survolRuban && vitesseRuban < 0.02;
+    if (renduAuRythme || figeSurvol || document.visibilityState !== "visible") {
+      actif = false;
+      if (animRuban && !survolRuban) animRuban.playbackRate = 1;
+      return;
     }
+    requestAnimationFrame(boucle);
   }
-  if (!reduit) {
-    requestAnimationFrame(boucle); // le ruban reste l'animation CSS, on module sa vitesse
-  } else {
-    window.addEventListener("scroll", () => {
-      const maxY = racine.scrollHeight - window.innerHeight;
-      racine.style.setProperty("--lu", maxY > 0 ? (window.scrollY / maxY).toFixed(4) : 0);
-      entete.classList.toggle("compacte", window.scrollY > hero.offsetHeight * 0.6);
-    }, { passive: true });
+
+  function reveiller() {
+    dernierScrollT = performance.now();
+    if (actif || reduit || document.visibilityState !== "visible") return;
+    actif = true;
+    dernierT = performance.now();
+    requestAnimationFrame(boucle);
   }
+
+  window.addEventListener("scroll", () => {
+    if (reduit) peindre(false);
+    reveiller();
+  }, { passive: true });
+  window.addEventListener("resize", reveiller);
+  ruban.addEventListener("mouseenter", reveiller);
+  ruban.addEventListener("mouseleave", reveiller);
+  document.addEventListener("visibilitychange", reveiller);
+  peindre(!reduit);
+  if (!reduit) reveiller();
 
   /* ---------- boutons aimantés + curseur personnalisé (pointeur fin uniquement) ---------- */
   const pointeurFin = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
@@ -259,6 +273,8 @@
         const dy = (e.clientY - (r.top + r.height / 2)) * 0.35;
         btn.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)`;
       });
+      // le transform inline du magnétisme écraserait le :active du CSS : on le retire au press
+      btn.addEventListener("pointerdown", () => { btn.style.transform = ""; });
       btn.addEventListener("mouseleave", () => { btn.style.transform = ""; });
     });
 
